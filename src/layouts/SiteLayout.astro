@@ -51,14 +51,24 @@ const tabIcon = tab?.icon ?? 'md';
 		<IconSprite />
 
 		<div class="app">
-			<nav class="activity" aria-hidden="true">
+			<nav class="activity" aria-label="快捷入口">
 				<div class="act-icons">
-					<span class="act-btn on" title="藏书"><svg><use href="#i-files"></use></svg></span>
-					<span class="act-btn" title="搜索"><svg><use href="#i-search"></use></svg></span>
-					<span class="act-btn" title="源代码管理"><svg><use href="#i-branch"></use></svg></span>
-					<span class="act-btn" title="标签"><svg><use href="#i-tag"></use></svg></span>
+					<span class="act-btn on" title="藏书" aria-hidden="true"
+						><svg><use href="#i-files"></use></svg></span
+					>
+					<a class="act-btn" href="/library/#search" title="搜索" aria-label="搜索"
+						><svg><use href="#i-search"></use></svg></a
+					>
+					<span class="act-btn" title="源代码管理" aria-hidden="true"
+						><svg><use href="#i-branch"></use></svg></span
+					>
+					<span class="act-btn" title="标签" aria-hidden="true"
+						><svg><use href="#i-tag"></use></svg></span
+					>
 				</div>
-				<span class="act-btn" title="设置"><svg><use href="#i-gear"></use></svg></span>
+				<span class="act-btn" title="设置" aria-hidden="true"
+					><svg><use href="#i-gear"></use></svg></span
+				>
 			</nav>
 
 			<aside class="sidebar" id="sidebar" aria-label="藏书目录">

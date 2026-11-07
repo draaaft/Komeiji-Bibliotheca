@@ -3,8 +3,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import { formatDate, loadLibrary } from '../lib/docs';
 import { site } from '../lib/site';
 
-const { docs, folders } = await loadLibrary();
-const featured = docs.find((doc) => doc.dir === '') ?? docs[0];
+const { docs } = await loadLibrary();
 const recent = docs.slice(0, 6);
 ---
 
