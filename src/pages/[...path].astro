@@ -1,0 +1,118 @@
+---
+import { render } from 'astro:content';
+import Breadcrumb, { type Crumb } from '../components/Breadcrumb.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { formatDate, loadLibrary, normalizePath, buildOutline, type Doc, type LibraryNode, type OutlineItem } from '../lib/docs';
+import 'katex/dist/katex.min.css';
+
+type Props =
+	| { kind: 'doc'; doc: Doc }
+	| { kind: 'folder'; folder: LibraryNode };
+
+export async function getStaticPaths() {
+	const { docs, folders } = await loadLibrary();
+	return [
+		...docs.map((doc) => ({
+			params: { path: doc.id },
+			props: { kind: 'doc' as const, doc },
+		})),
+		...folders.map((folder) => ({
+			params: { path: folder.path.replace(/^\/|\/$/g, '') },
+			props: { kind: 'folder' as const, folder },
+		})),
+	];
+}
+
+const props = Astro.props as Props;
+const activeDoc = props.kind === 'doc' ? props.doc : undefined;
+const activeFolder = props.kind === 'folder' ? props.folder : undefined;
+
+let Content: any = null;
+let outline: OutlineItem[] = [];
+let crumbs: Crumb[] = [];
+
+if (activeDoc) {
+	const rendered = await render(activeDoc.entry);
+	Content = rendered.Content;
+	outline = buildOutline(activeDoc, rendered.headings);
+	const segments = activeDoc.id.split('/');
+	crumbs = [
+		...segments.slice(0, -1).map((name, index) => ({
+			name,
+			path: normalizePath(segments.slice(0, index + 1).join('/')),
+		})),
+		{ name: activeDoc.file },
+	];
+} else if (activeFolder) {
+	const segments = activeFolder.path.replace(/^\/|\/$/g, '').split('/');
+	crumbs = segments.map((name, index) => ({
+		name,
+		path: index === segments.length - 1 ? undefined : normalizePath(segments.slice(0, index + 1).join('/')),
+	}));
+}
+---
+
+<SiteLayout
+	title={activeDoc?.title ?? activeFolder?.name ?? '藏书'}
+	description={activeDoc?.description}
+	tab={activeDoc
+		? { label: activeDoc.file, href: activeDoc.path }
+		: activeFolder
+			? { label: activeFolder.name, href: activeFolder.path, icon: 'folder' }
+			: undefined}
+	outline={outline}
+>
+	<Breadcrumb parts={crumbs} />
+
+	{
+		activeDoc ? (
+			<>
+				{!activeDoc.hasH1 && <h1 class="doc-title">{activeDoc.title}</h1>}
+				<article class="prose">
+					<Content />
+				</article>
+				{activeDoc.tags.length > 0 && (
+					<footer class="doc-foot">
+						{activeDoc.tags.map((tag) => (
+							<span class="tag">{tag}</span>
+						))}
+					</footer>
+				)}
+			</>
+		) : activeFolder ? (
+			<>
+				<header class="page-head">
+					<h1 class="page-title">{activeFolder.name}</h1>
+					<p class="page-sub mono">{activeFolder.count} 篇藏书</p>
+				</header>
+				<div class="lib-list">
+					{activeFolder.children.map((child) =>
+						child.kind === 'folder' ? (
+							<a class="lib-item" href={child.path}>
+								<svg class="ic folder"><use href="#i-folder"></use></svg>
+								<span class="lib-main">
+									<span class="lib-title">{child.name}/</span>
+									<span class="lib-path mono">{child.count} 篇</span>
+								</span>
+								<svg class="lib-arrow"><use href="#i-chev"></use></svg>
+							</a>
+						) : (
+							<a class="lib-item" href={child.path}>
+								<svg class="ic"><use href="#i-md"></use></svg>
+								<span class="lib-main">
+									<span class="lib-title">{child.doc?.title}</span>
+									<span class="lib-path mono">{child.name}</span>
+								</span>
+								{child.doc?.date && (
+									<time class="lib-date mono" datetime={child.doc.date.toISOString()}>
+										{formatDate(child.doc.date)}
+									</time>
+								)}
+							</a>
+						)
+					)}
+				</div>
+			</>
+		) : null
+	}
+</SiteLayout>

@@ -1,0 +1,55 @@
+---
+import type { LibraryNode } from '../lib/docs';
+
+interface Props {
+	nodes: LibraryNode[];
+	current: string;
+	depth?: number;
+	root?: boolean;
+}
+
+const { nodes, current, depth = 0, root = true } = Astro.props;
+---
+
+<ul class:list={[root ? 'tree' : 'tree-children']}>
+	{
+		nodes.map((node) =>
+			node.kind === 'folder' ? (
+				<li class="tree-node">
+					<div class:list={['trow', 'folder', { sel: current === node.path }]} style={`--depth:${depth}`}>
+						<button
+							class="chev"
+							type="button"
+							aria-expanded="true"
+							aria-label={`折叠 ${node.name}`}
+							data-tree-toggle
+							data-name={node.name}
+						>
+							<svg><use href="#i-chev"></use></svg>
+						</button>
+						<a class="tree-link" href={node.path} aria-current={current === node.path ? 'page' : undefined}>
+							<svg class="ic"><use href="#i-folder"></use></svg>
+							<span class="nm">{node.name}</span>
+							<span class="ct">{node.count}</span>
+						</a>
+					</div>
+					<Astro.self nodes={node.children} current={current} depth={depth + 1} root={false} />
+				</li>
+			) : (
+				<li class="tree-node">
+					<a
+						class:list={['trow', { sel: current === node.path }]}
+						href={node.path}
+						aria-current={current === node.path ? 'page' : undefined}
+						style={`--depth:${depth}`}
+						title={node.name}
+					>
+						<span class="chev"></span>
+						<svg class="ic"><use href="#i-md"></use></svg>
+						<span class="nm">{node.name}</span>
+					</a>
+				</li>
+			)
+		)
+	}
+</ul>

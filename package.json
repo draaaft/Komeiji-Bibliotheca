@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "komeiji-bibliotheca",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -12,6 +12,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.4.7"
+    "@astrojs/markdown-satteri": "^0.4.7",
+    "astro": "^7.4.7",
+    "katex": "^0.19.1",
+    "satteri": "^0.11.7",
+    "satteri-katex": "^0.3.0"
   }
 }

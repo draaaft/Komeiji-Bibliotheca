@@ -1,0 +1,39 @@
+---
+interface Heading {
+	slug: string;
+	text: string;
+}
+
+interface Props {
+	headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<aside class="outline" aria-label="文章目录">
+	<button
+		class="toc-toggle"
+		id="toc-toggle"
+		type="button"
+		aria-expanded="true"
+		aria-controls="toc"
+		title="隐藏目录"
+	>
+		<svg><use href="#i-panel"></use></svg>
+	</button>
+	<nav class="toc" id="toc">
+		{
+			headings.map((heading, index) => (
+				<a
+					class:list={['toc-i', { on: index === 0 }]}
+					href={`#${heading.slug}`}
+					data-target={heading.slug}
+					title={heading.text}
+				>
+					{heading.text}
+				</a>
+			))
+		}
+	</nav>
+</aside>

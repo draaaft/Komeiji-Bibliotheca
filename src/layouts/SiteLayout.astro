@@ -1,0 +1,186 @@
+---
+import FileTree from '../components/FileTree.astro';
+import IconSprite from '../components/IconSprite.astro';
+import Outline from '../components/Outline.astro';
+import { loadLibrary, normalizePath } from '../lib/docs';
+import { site } from '../lib/site';
+import '../styles/global.css';
+
+interface OutlineHeading {
+	slug: string;
+	text: string;
+}
+
+interface Tab {
+	label: string;
+	href: string;
+	icon?: 'md' | 'folder' | 'files';
+}
+
+interface Props {
+	title: string;
+	description?: string;
+	tab?: Tab;
+	outline?: OutlineHeading[];
+}
+
+const { title, description = site.description, tab, outline = [] } = Astro.props;
+const { tree } = await loadLibrary();
+const current = normalizePath(Astro.url.pathname);
+const documentTitle = title === site.nameZh ? `${title} · ${site.name}` : `${title} · ${site.nameZh}`;
+const tabIcon = tab?.icon ?? 'md';
+---
+
+<!doctype html>
+<html lang="zh-CN" data-palette="vscode" data-mode="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<title>{documentTitle}</title>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<IconSprite />
+
+		<div class="app">
+			<nav class="activity" aria-hidden="true">
+				<div class="act-icons">
+					<span class="act-btn on" title="藏书"><svg><use href="#i-files"></use></svg></span>
+					<span class="act-btn" title="搜索"><svg><use href="#i-search"></use></svg></span>
+					<span class="act-btn" title="源代码管理"><svg><use href="#i-branch"></use></svg></span>
+					<span class="act-btn" title="标签"><svg><use href="#i-tag"></use></svg></span>
+				</div>
+				<span class="act-btn" title="设置"><svg><use href="#i-gear"></use></svg></span>
+			</nav>
+
+			<aside class="sidebar" id="sidebar" aria-label="藏书目录">
+				<div class="sb-head">藏书</div>
+				<a class="ws" href="/" title={site.name}>
+					<span class="chev"><svg><use href="#i-chev"></use></svg></span>
+					<span>{site.root}</span>
+				</a>
+				<FileTree nodes={tree} current={current} />
+			</aside>
+
+			<main class="main">
+				<div class="mobilebar">
+					<button
+						class="burger"
+						type="button"
+						aria-label="打开文件树"
+						aria-controls="sidebar"
+						aria-expanded="false"
+					>
+						<svg><use href="#i-burger"></use></svg>
+					</button>
+					<a class="mb-title mono" href="/">~/{site.root}</a>
+				</div>
+
+				<div class="tabbar">
+					<a
+						class:list={['tab', { on: current === '/' }]}
+						href="/"
+						aria-current={current === '/' ? 'page' : undefined}
+					>
+						<svg class="ic"><use href="#i-flag"></use></svg><span>开始</span><span class="x" aria-hidden="true">×</span>
+					</a>
+					{
+						tab && (
+							<a class="tab on" href={tab.href} aria-current="page">
+								<svg class="ic"><use href={`#i-${tabIcon}`}></use></svg>
+								<span>{tab.label}</span>
+								<span class="x" aria-hidden="true">×</span>
+							</a>
+						)
+					}
+					<div class="tab-plus" aria-hidden="true">+</div>
+				</div>
+
+				<div class="editor" id="editor">
+					<div class="page">
+						<div class="page-content">
+							<slot />
+						</div>
+						{outline.length > 0 && <Outline headings={outline} />}
+					</div>
+				</div>
+			</main>
+		</div>
+
+		<div class="scrim"></div>
+
+		<script>
+			(function () {
+				const root = document.documentElement;
+				const params = new URLSearchParams(location.search);
+				root.dataset.palette = params.get('p') || 'vscode';
+				root.dataset.mode = params.get('l') === '1' || params.get('m') === 'light' ? 'light' : 'dark';
+
+				const body = document.body;
+				const burger = document.querySelector('.burger');
+				const scrim = document.querySelector('.scrim');
+				const setDrawer = (open) => {
+					body.classList.toggle('drawer-open', open);
+					burger?.setAttribute('aria-expanded', String(open));
+				};
+				burger?.addEventListener('click', () => setDrawer(!body.classList.contains('drawer-open')));
+				scrim?.addEventListener('click', () => setDrawer(false));
+				window.addEventListener('pageshow', () => setDrawer(false));
+
+				document.querySelectorAll('[data-tree-toggle]').forEach((button) => {
+					button.addEventListener('click', () => {
+						const group = button.closest('.tree-node')?.querySelector(':scope > .tree-children');
+						if (!group) return;
+						const collapsed = !group.hasAttribute('hidden');
+						group.toggleAttribute('hidden', collapsed);
+						button.setAttribute('aria-expanded', String(!collapsed));
+						button.setAttribute(
+							'aria-label',
+							`${collapsed ? '展开' : '折叠'} ${button.dataset.name ?? ''}`
+						);
+					});
+				});
+
+				const tocToggle = document.getElementById('toc-toggle');
+				tocToggle?.addEventListener('click', () => {
+					const off = body.classList.toggle('toc-off');
+					tocToggle.setAttribute('aria-expanded', String(!off));
+					tocToggle.title = off ? '显示目录' : '隐藏目录';
+				});
+
+				document
+					.querySelector('.trow[aria-current="page"], .trow.sel')
+					?.scrollIntoView({ block: 'nearest' });
+
+				const tocLinks = [...document.querySelectorAll('.toc-i[data-target]')];
+				const editor = document.getElementById('editor');
+
+				if (tocLinks.length && editor) {
+					const headings = tocLinks
+						.map((link) => document.getElementById(link.dataset.target ?? ''))
+						.filter((heading) => heading !== null);
+					const activate = (id) =>
+						tocLinks.forEach((link) => link.classList.toggle('on', link.dataset.target === id));
+					const observer = new IntersectionObserver(
+						(entries) => {
+							const visible = entries
+								.filter((entry) => entry.isIntersecting)
+								.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+							if (visible[0]) activate(visible[0].target.id);
+						},
+						{ root: editor, rootMargin: '0px 0px -72% 0px', threshold: 0 }
+					);
+					headings.forEach((heading) => observer.observe(heading));
+				}
+			})();
+		</script>
+	</body>
+</html>

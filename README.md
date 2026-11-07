@@ -1,43 +1,34 @@
-# Astro Starter Kit: Minimal
+# Komeiji Bibliotheca
+
+古明寺藏书阁：以 `src/content` 为唯一内容源的静态站点，外壳是一个 IDE 风格的文件浏览器。
+
+## 开发
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+其他命令：`npm run build`、`npm run preview`。
 
-## 🚀 Project Structure
+## 内容
 
-Inside of your Astro project, you'll see the following folders and files:
+- 目录结构就是侧边栏结构，每个 `.md` 文件对应一个页面，URL 与 `src/content` 下的路径一致。
+  例如 `src/content/semiconductor/energy_band.md` 对应 `/semiconductor/energy_band/`。
+- 首页和「全部藏书」都从 content collection 生成，新增文件后无需修改 HTML。
+- 图片放在 Markdown 同目录并用相对路径引用；缺失的图片会显示占位块，不会中断构建。
+- 公式 `$...$` 与 `$$...$$` 由 KaTeX 渲染。
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+可选 frontmatter：
+
+```yaml
+---
+title: 能级与能带
+description: 一句话摘要
+date: 2026-11-05
+tags: [semiconductor]
+draft: false
+---
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+`date` 用于排序和展示。没有 frontmatter 时，标题取第一个 `#` 标题，取不到则使用文件名。

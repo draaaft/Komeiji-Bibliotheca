@@ -1,0 +1,24 @@
+---
+export interface Crumb {
+	name: string;
+	path?: string;
+}
+
+interface Props {
+	parts: Crumb[];
+}
+
+const { parts } = Astro.props;
+---
+
+<nav class="crumb mono" aria-label="路径">
+	<a href="/">~</a>
+	{
+		parts.map((part) => (
+			<Fragment>
+				<span class="sep">/</span>
+				{part.path ? <a href={part.path}>{part.name}</a> : <span class="cur">{part.name}</span>}
+			</Fragment>
+		))
+	}
+</nav>
