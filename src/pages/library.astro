@@ -2,11 +2,12 @@
 import Breadcrumb from '../components/Breadcrumb.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { formatDate, latestDate, loadLibrary } from '../lib/docs';
+import { withBase } from '../lib/site';
 
 const { docs } = await loadLibrary();
 ---
 
-<SiteLayout title="全部藏书" tab={{ label: '藏书阁', href: '/library/', icon: 'files' }}>
+<SiteLayout title="全部藏书" tab={{ label: '藏书阁', href: withBase('/library/'), icon: 'files' }}>
 	<Breadcrumb parts={[{ name: 'library' }]} />
 
 	<header class="page-head">
@@ -33,7 +34,7 @@ const { docs } = await loadLibrary();
 				return (
 					<a
 						class="lib-item"
-						href={doc.path}
+						href={withBase(doc.path)}
 						data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
 					>
 						<svg class="ic"><use href="#i-md"></use></svg>

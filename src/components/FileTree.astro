@@ -1,5 +1,6 @@
 ---
 import type { LibraryNode } from '../lib/docs';
+import { withBase } from '../lib/site';
 
 interface Props {
 	nodes: LibraryNode[];
@@ -26,7 +27,7 @@ const { nodes, current, depth = 0 } = Astro.props;
 						>
 							<svg><use href="#i-chev"></use></svg>
 						</button>
-						<a class="tree-link" href={node.path} aria-current={current === node.path ? 'page' : undefined}>
+						<a class="tree-link" href={withBase(node.path)} aria-current={current === node.path ? 'page' : undefined}>
 							<svg class="ic"><use href="#i-folder"></use></svg>
 							<span class="nm">{node.name}</span>
 							<span class="ct">{node.count}</span>
@@ -38,7 +39,7 @@ const { nodes, current, depth = 0 } = Astro.props;
 				<li class="tree-node">
 					<a
 						class:list={['trow', { sel: current === node.path }]}
-						href={node.path}
+						href={withBase(node.path)}
 						aria-current={current === node.path ? 'page' : undefined}
 						style={`--depth:${depth}`}
 						title={node.doc?.title ?? node.name}

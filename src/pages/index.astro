@@ -1,7 +1,7 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { formatDate, latestDate, loadLibrary } from '../lib/docs';
-import { site } from '../lib/site';
+import { site, withBase } from '../lib/site';
 
 const { docs } = await loadLibrary();
 const recent = docs.slice(0, 6);
@@ -18,7 +18,7 @@ const recent = docs.slice(0, 6);
 					recent.map((doc) => {
 						const date = latestDate(doc);
 						return (
-							<a class="w-item" href={doc.path}>
+							<a class="w-item" href={withBase(doc.path)}>
 								<svg class="ic"><use href="#i-md"></use></svg>
 								<span class="w-t">{doc.title}</span>
 								<span class="w-d mono">{date ? formatDate(date) : doc.dir || '根目录'}</span>
@@ -31,7 +31,7 @@ const recent = docs.slice(0, 6);
 			}
 			{
 				docs.length > recent.length && (
-					<a class="w-more mono" href="/library/">查看全部 {docs.length} 篇 →</a>
+					<a class="w-more mono" href={withBase('/library/')}>查看全部 {docs.length} 篇 →</a>
 				)
 			}
 		</section>

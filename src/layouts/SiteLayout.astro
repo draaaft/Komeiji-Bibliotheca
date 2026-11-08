@@ -2,8 +2,8 @@
 import FileTree from '../components/FileTree.astro';
 import IconSprite from '../components/IconSprite.astro';
 import Outline from '../components/Outline.astro';
-import { loadLibrary, normalizePath, type OutlineItem } from '../lib/docs';
-import { site } from '../lib/site';
+import { loadLibrary, type OutlineItem } from '../lib/docs';
+import { site, toContentPath, withBase } from '../lib/site';
 import '../styles/global.css';
 
 interface Tab {
@@ -22,7 +22,7 @@ interface Props {
 
 const { title, description = site.description, author, tab, outline = [] } = Astro.props;
 const { tree } = await loadLibrary();
-const current = normalizePath(Astro.url.pathname);
+const current = toContentPath(Astro.url.pathname);
 const documentTitle = title === site.nameZh ? `${title} · ${site.name}` : `${title} · ${site.nameZh}`;
 const tabIcon = tab?.icon ?? 'md';
 ---
@@ -47,8 +47,7 @@ const tabIcon = tab?.icon ?? 'md';
 		<meta name="description" content={description} />
 		{author && <meta name="author" content={author} />}
 		<title>{documentTitle}</title>
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" href={withBase('/favicon.ico')} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -65,7 +64,7 @@ const tabIcon = tab?.icon ?? 'md';
 					<span class="act-btn on" title="藏书" aria-hidden="true"
 						><svg><use href="#i-files"></use></svg></span
 					>
-					<a class="act-btn" href="/library/#search" title="搜索" aria-label="搜索"
+					<a class="act-btn" href={withBase('/library/#search')} title="搜索" aria-label="搜索"
 						><svg><use href="#i-search"></use></svg></a
 					>
 					<span class="act-btn" title="源代码管理" aria-hidden="true"
@@ -88,7 +87,7 @@ const tabIcon = tab?.icon ?? 'md';
 
 			<aside class="sidebar" id="sidebar" aria-label="藏书目录">
 				<div class="sb-head">藏书</div>
-				<a class="ws" href="/" title={site.name}>
+				<a class="ws" href={withBase('/')} title={site.name}>
 					<span class="chev"><svg><use href="#i-chev"></use></svg></span>
 					<span>{site.root}</span>
 				</a>
@@ -106,13 +105,13 @@ const tabIcon = tab?.icon ?? 'md';
 					>
 						<svg><use href="#i-burger"></use></svg>
 					</button>
-					<a class="mb-title mono" href="/">~/{site.root}</a>
+					<a class="mb-title mono" href={withBase('/')}>~/{site.root}</a>
 				</div>
 
 				<div class="tabbar">
 					<a
 						class:list={['tab', { on: current === '/' }]}
-						href="/"
+						href={withBase('/')}
 						aria-current={current === '/' ? 'page' : undefined}
 					>
 						<svg class="ic"><use href="#i-flag"></use></svg><span>开始</span><span class="x" aria-hidden="true">×</span>

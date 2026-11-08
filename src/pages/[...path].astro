@@ -12,6 +12,7 @@ import {
 	type LibraryNode,
 	type OutlineItem,
 } from '../lib/docs';
+import { withBase } from '../lib/site';
 import 'katex/dist/katex.min.css';
 
 type Props =
@@ -66,9 +67,9 @@ if (activeDoc) {
 	description={activeDoc?.description}
 	author={activeDoc?.author}
 	tab={activeDoc
-		? { label: activeDoc.file, href: activeDoc.path }
+		? { label: activeDoc.file, href: withBase(activeDoc.path) }
 		: activeFolder
-			? { label: activeFolder.name, href: activeFolder.path, icon: 'folder' }
+			? { label: activeFolder.name, href: withBase(activeFolder.path), icon: 'folder' }
 			: undefined}
 	outline={outline}
 >
@@ -92,7 +93,7 @@ if (activeDoc) {
 					{activeFolder.children.map((child) => {
 						if (child.kind === 'folder') {
 							return (
-								<a class="lib-item" href={child.path}>
+								<a class="lib-item" href={withBase(child.path)}>
 									<svg class="ic folder"><use href="#i-folder"></use></svg>
 									<span class="lib-main">
 										<span class="lib-title">{child.name}/</span>
@@ -105,7 +106,7 @@ if (activeDoc) {
 
 						const date = child.doc ? latestDate(child.doc) : undefined;
 						return (
-							<a class="lib-item" href={child.path}>
+							<a class="lib-item" href={withBase(child.path)}>
 								<svg class="ic"><use href="#i-md"></use></svg>
 								<span class="lib-main">
 									<span class="lib-title">{child.doc?.title}</span>

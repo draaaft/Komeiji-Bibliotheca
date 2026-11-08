@@ -1,4 +1,6 @@
 ---
+import { withBase } from '../lib/site';
+
 export interface Crumb {
 	name: string;
 	path?: string;
@@ -12,12 +14,16 @@ const { parts } = Astro.props;
 ---
 
 <nav class="crumb mono" aria-label="路径">
-	<a href="/">~</a>
+	<a href={withBase('/')}>~</a>
 	{
 		parts.map((part) => (
 			<Fragment>
 				<span class="sep">/</span>
-				{part.path ? <a href={part.path}>{part.name}</a> : <span class="cur">{part.name}</span>}
+				{part.path ? (
+					<a href={withBase(part.path)}>{part.name}</a>
+				) : (
+					<span class="cur">{part.name}</span>
+				)}
 			</Fragment>
 		))
 	}
