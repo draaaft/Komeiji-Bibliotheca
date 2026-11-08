@@ -7,7 +7,9 @@ import { displayMath, docMeta, missingImages } from './src/lib/markdown-plugins.
 
 // https://astro.build/config
 export default defineConfig({
-	markdown: {
+  site: 'https://draaaft.github.io',
+  base: '/Komeiji-Bibliotheca',
+  markdown: {
 		processor: satteri({
 			features: { math: true },
 			mdastPlugins: [missingImages(), displayMath(), docMeta(), satteriKatex()],
