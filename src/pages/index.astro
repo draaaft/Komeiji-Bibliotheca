@@ -1,6 +1,6 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { formatDate, loadLibrary } from '../lib/docs';
+import { formatDate, latestDate, loadLibrary } from '../lib/docs';
 import { site } from '../lib/site';
 
 const { docs } = await loadLibrary();
@@ -15,13 +15,16 @@ const recent = docs.slice(0, 6);
 			<div class="w-head mono" id="recent-title"><span>藏书</span><span class="w-en">LIBRARY</span></div>
 			{
 				recent.length > 0 ? (
-					recent.map((doc) => (
-						<a class="w-item" href={doc.path}>
-							<svg class="ic"><use href="#i-md"></use></svg>
-							<span class="w-t">{doc.title}</span>
-							<span class="w-d mono">{doc.date ? formatDate(doc.date) : doc.dir || '根目录'}</span>
-						</a>
-					))
+					recent.map((doc) => {
+						const date = latestDate(doc);
+						return (
+							<a class="w-item" href={doc.path}>
+								<svg class="ic"><use href="#i-md"></use></svg>
+								<span class="w-t">{doc.title}</span>
+								<span class="w-d mono">{date ? formatDate(date) : doc.dir || '根目录'}</span>
+							</a>
+						);
+					})
 				) : (
 					<p class="empty">还没有内容。</p>
 				)

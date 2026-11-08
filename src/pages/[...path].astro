@@ -2,7 +2,16 @@
 import { render } from 'astro:content';
 import Breadcrumb, { type Crumb } from '../components/Breadcrumb.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { formatDate, loadLibrary, normalizePath, buildOutline, type Doc, type LibraryNode, type OutlineItem } from '../lib/docs';
+import {
+	buildOutline,
+	formatDate,
+	latestDate,
+	loadLibrary,
+	normalizePath,
+	type Doc,
+	type LibraryNode,
+	type OutlineItem,
+} from '../lib/docs';
 import 'katex/dist/katex.min.css';
 
 type Props =
@@ -55,6 +64,7 @@ if (activeDoc) {
 <SiteLayout
 	title={activeDoc?.title ?? activeFolder?.name ?? '藏书'}
 	description={activeDoc?.description}
+	author={activeDoc?.author}
 	tab={activeDoc
 		? { label: activeDoc.file, href: activeDoc.path }
 		: activeFolder
@@ -71,13 +81,6 @@ if (activeDoc) {
 				<article class="prose">
 					<Content />
 				</article>
-				{activeDoc.tags.length > 0 && (
-					<footer class="doc-foot">
-						{activeDoc.tags.map((tag) => (
-							<span class="tag">{tag}</span>
-						))}
-					</footer>
-				)}
 			</>
 		) : activeFolder ? (
 			<>
@@ -86,31 +89,36 @@ if (activeDoc) {
 					<p class="page-sub mono">{activeFolder.count} 篇藏书</p>
 				</header>
 				<div class="lib-list">
-					{activeFolder.children.map((child) =>
-						child.kind === 'folder' ? (
-							<a class="lib-item" href={child.path}>
-								<svg class="ic folder"><use href="#i-folder"></use></svg>
-								<span class="lib-main">
-									<span class="lib-title">{child.name}/</span>
-									<span class="lib-path mono">{child.count} 篇</span>
-								</span>
-								<svg class="lib-arrow"><use href="#i-chev"></use></svg>
-							</a>
-						) : (
+					{activeFolder.children.map((child) => {
+						if (child.kind === 'folder') {
+							return (
+								<a class="lib-item" href={child.path}>
+									<svg class="ic folder"><use href="#i-folder"></use></svg>
+									<span class="lib-main">
+										<span class="lib-title">{child.name}/</span>
+										<span class="lib-path mono">{child.count} 篇</span>
+									</span>
+									<svg class="lib-arrow"><use href="#i-chev"></use></svg>
+								</a>
+							);
+						}
+
+						const date = child.doc ? latestDate(child.doc) : undefined;
+						return (
 							<a class="lib-item" href={child.path}>
 								<svg class="ic"><use href="#i-md"></use></svg>
 								<span class="lib-main">
 									<span class="lib-title">{child.doc?.title}</span>
 									<span class="lib-path mono">{child.name}</span>
 								</span>
-								{child.doc?.date && (
-									<time class="lib-date mono" datetime={child.doc.date.toISOString()}>
-										{formatDate(child.doc.date)}
+								{date && (
+									<time class="lib-date mono" datetime={date.toISOString()}>
+										{formatDate(date)}
 									</time>
 								)}
 							</a>
-						)
-					)}
+						);
+					})}
 				</div>
 			</>
 		) : null

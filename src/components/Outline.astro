@@ -1,11 +1,8 @@
 ---
-interface Heading {
-	slug: string;
-	text: string;
-}
+import type { OutlineItem } from '../lib/docs';
 
 interface Props {
-	headings: Heading[];
+	headings: OutlineItem[];
 }
 
 const { headings } = Astro.props;

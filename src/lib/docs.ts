@@ -6,8 +6,10 @@ export interface Doc {
 	dir: string;
 	file: string;
 	title: string;
+	author?: string;
 	description?: string;
-	date?: Date;
+	pubDate?: Date;
+	update?: Date;
 	tags: string[];
 	hasH1: boolean;
 	entry: CollectionEntry<'docs'>;
@@ -17,7 +19,6 @@ export interface LibraryNode {
 	kind: 'folder' | 'file';
 	name: string;
 	path: string;
-	depth: number;
 	count: number;
 	children: LibraryNode[];
 	doc?: Doc;
@@ -42,11 +43,6 @@ const stripInline = (value: string) =>
 		.replace(/[*_~`]/g, '')
 		.trim();
 
-const humanize = (name: string) => {
-	const text = name.replace(/[-_]+/g, ' ').trim();
-	return text.charAt(0).toUpperCase() + text.slice(1);
-};
-
 export function normalizePath(path: string): string {
 	const withLeading = path.startsWith('/') ? path : `/${path}`;
 	return withLeading.endsWith('/') ? withLeading : `${withLeading}/`;
@@ -55,6 +51,10 @@ export function normalizePath(path: string): string {
 export function formatDate(date: Date): string {
 	const pad = (value: number) => String(value).padStart(2, '0');
 	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function latestDate(doc: Doc): Date | undefined {
+	return doc.update ?? doc.pubDate;
 }
 
 // Heading text from the parsed AST drops math, so pair each h2 with its raw
@@ -82,14 +82,17 @@ function toDoc(entry: CollectionEntry<'docs'>): Doc {
 	const stem = segments.at(-1)!;
 	const body = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '');
 	const heading = body.match(/^ {0,3}#[ \t]+(.+?)[ \t]*$/m)?.[1];
+	const fallbackTitle = heading ? stripInline(heading) : stem;
 	return {
 		id: entry.id,
 		path: normalizePath(entry.id),
 		dir: segments.slice(0, -1).join('/'),
 		file: `${stem}.md`,
-		title: entry.data.title ?? (heading ? stripInline(heading) : humanize(stem)),
+		title: entry.data.title?.trim() || fallbackTitle,
+		author: entry.data.author,
 		description: entry.data.description,
-		date: entry.data.date,
+		pubDate: entry.data.pubDate,
+		update: entry.data.update,
 		tags: entry.data.tags,
 		hasH1: Boolean(heading),
 		entry,
@@ -97,11 +100,13 @@ function toDoc(entry: CollectionEntry<'docs'>): Doc {
 }
 
 function compareDocs(a: Doc, b: Doc): number {
-	if (a.date && b.date) {
-		return b.date.getTime() - a.date.getTime() || a.path.localeCompare(b.path, 'zh-Hans-CN');
+	const aDate = latestDate(a);
+	const bDate = latestDate(b);
+	if (aDate && bDate) {
+		return bDate.getTime() - aDate.getTime() || a.path.localeCompare(b.path, 'zh-Hans-CN');
 	}
-	if (a.date) return -1;
-	if (b.date) return 1;
+	if (aDate) return -1;
+	if (bDate) return 1;
 	return a.path.localeCompare(b.path, 'zh-Hans-CN');
 }
 
@@ -114,7 +119,6 @@ interface DraftFolder {
 	kind: 'folder';
 	name: string;
 	path: string;
-	depth: number;
 	children: Map<string, DraftNode>;
 }
 
@@ -122,7 +126,6 @@ interface DraftFile {
 	kind: 'file';
 	name: string;
 	path: string;
-	depth: number;
 	doc: Doc;
 }
 
@@ -141,7 +144,6 @@ function buildTree(docs: Doc[]): LibraryNode[] {
 					kind: 'file',
 					name: doc.file,
 					path: doc.path,
-					depth: index,
 					doc,
 				});
 				continue;
@@ -156,7 +158,6 @@ function buildTree(docs: Doc[]): LibraryNode[] {
 							kind: 'folder',
 							name,
 							path: normalizePath(segments.slice(0, index + 1).join('/')),
-							depth: index,
 							children: new Map(),
 						};
 			level.set(key, folder);
@@ -172,7 +173,6 @@ function buildTree(docs: Doc[]): LibraryNode[] {
 						kind: 'file',
 						name: node.name,
 						path: node.path,
-						depth: node.depth,
 						count: 1,
 						children: [],
 						doc: node.doc,
@@ -183,7 +183,6 @@ function buildTree(docs: Doc[]): LibraryNode[] {
 					kind: 'folder',
 					name: node.name,
 					path: node.path,
-					depth: node.depth,
 					count: children.reduce((total, child) => total + child.count, 0),
 					children,
 				};

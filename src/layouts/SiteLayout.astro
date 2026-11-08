@@ -2,14 +2,9 @@
 import FileTree from '../components/FileTree.astro';
 import IconSprite from '../components/IconSprite.astro';
 import Outline from '../components/Outline.astro';
-import { loadLibrary, normalizePath } from '../lib/docs';
+import { loadLibrary, normalizePath, type OutlineItem } from '../lib/docs';
 import { site } from '../lib/site';
 import '../styles/global.css';
-
-interface OutlineHeading {
-	slug: string;
-	text: string;
-}
 
 interface Tab {
 	label: string;
@@ -20,11 +15,12 @@ interface Tab {
 interface Props {
 	title: string;
 	description?: string;
+	author?: string;
 	tab?: Tab;
-	outline?: OutlineHeading[];
+	outline?: OutlineItem[];
 }
 
-const { title, description = site.description, tab, outline = [] } = Astro.props;
+const { title, description = site.description, author, tab, outline = [] } = Astro.props;
 const { tree } = await loadLibrary();
 const current = normalizePath(Astro.url.pathname);
 const documentTitle = title === site.nameZh ? `${title} · ${site.name}` : `${title} · ${site.nameZh}`;
@@ -32,11 +28,24 @@ const tabIcon = tab?.icon ?? 'md';
 ---
 
 <!doctype html>
-<html lang="zh-CN" data-palette="vscode" data-mode="dark">
+<html lang="zh-CN" data-mode="dark">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script is:inline>
+			try {
+				const params = new URLSearchParams(location.search);
+				if (
+					params.get('l') === '1' ||
+					params.get('m') === 'light' ||
+					localStorage.getItem('komeiji-theme') === 'light'
+				) {
+					document.documentElement.dataset.mode = 'light';
+				}
+			} catch {}
+		</script>
 		<meta name="description" content={description} />
+		{author && <meta name="author" content={author} />}
 		<title>{documentTitle}</title>
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
@@ -66,9 +75,15 @@ const tabIcon = tab?.icon ?? 'md';
 						><svg><use href="#i-tag"></use></svg></span
 					>
 				</div>
-				<span class="act-btn" title="设置" aria-hidden="true"
-					><svg><use href="#i-gear"></use></svg></span
+				<button
+					class="act-btn"
+					type="button"
+					data-theme-toggle
+					title="切换深浅色主题"
+					aria-label="切换深浅色主题"
 				>
+					<svg><use href="#i-gear"></use></svg>
+				</button>
 			</nav>
 
 			<aside class="sidebar" id="sidebar" aria-label="藏书目录">
@@ -130,9 +145,14 @@ const tabIcon = tab?.icon ?? 'md';
 		<script>
 			(function () {
 				const root = document.documentElement;
-				const params = new URLSearchParams(location.search);
-				root.dataset.palette = params.get('p') || 'vscode';
-				root.dataset.mode = params.get('l') === '1' || params.get('m') === 'light' ? 'light' : 'dark';
+				const themeToggle = document.querySelector('[data-theme-toggle]');
+				themeToggle?.addEventListener('click', () => {
+					const mode = root.dataset.mode === 'light' ? 'dark' : 'light';
+					root.dataset.mode = mode;
+					try {
+						localStorage.setItem('komeiji-theme', mode);
+					} catch {}
+				});
 
 				const body = document.body;
 				const burger = document.querySelector('.burger');

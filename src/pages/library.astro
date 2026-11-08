@@ -1,7 +1,7 @@
 ---
 import Breadcrumb from '../components/Breadcrumb.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { formatDate, loadLibrary } from '../lib/docs';
+import { formatDate, latestDate, loadLibrary } from '../lib/docs';
 
 const { docs } = await loadLibrary();
 ---
@@ -28,24 +28,27 @@ const { docs } = await loadLibrary();
 
 	<div class="lib-list" id="lib-list">
 		{
-			docs.map((doc) => (
-				<a
-					class="lib-item"
-					href={doc.path}
-					data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
-				>
-					<svg class="ic"><use href="#i-md"></use></svg>
-					<span class="lib-main">
-						<span class="lib-title">{doc.title}</span>
-						<span class="lib-path mono">{doc.dir ? `${doc.dir}/` : ''}{doc.file}</span>
-					</span>
-					{doc.date && (
-						<time class="lib-date mono" datetime={doc.date.toISOString()}>
-							{formatDate(doc.date)}
-						</time>
-					)}
-				</a>
-			))
+			docs.map((doc) => {
+				const date = latestDate(doc);
+				return (
+					<a
+						class="lib-item"
+						href={doc.path}
+						data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
+					>
+						<svg class="ic"><use href="#i-md"></use></svg>
+						<span class="lib-main">
+							<span class="lib-title">{doc.title}</span>
+							<span class="lib-path mono">{doc.dir ? `${doc.dir}/` : ''}{doc.file}</span>
+						</span>
+						{date && (
+							<time class="lib-date mono" datetime={date.toISOString()}>
+								{formatDate(date)}
+							</time>
+						)}
+					</a>
+				);
+			})
 		}
 	</div>
 
