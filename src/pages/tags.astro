@@ -1,0 +1,45 @@
+---
+import Breadcrumb from '../components/Breadcrumb.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { loadLibrary } from '../lib/docs';
+import { withBase } from '../lib/site';
+
+const { docs } = await loadLibrary();
+const counts = new Map<string, number>();
+
+for (const doc of docs) {
+	for (const tag of doc.tags) {
+		counts.set(tag, (counts.get(tag) ?? 0) + 1);
+	}
+}
+
+const tags = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b, 'zh-Hans-CN'));
+---
+
+<SiteLayout title="标签" tab={{ label: '标签', href: withBase('/tags/'), icon: 'tag' }}>
+	<Breadcrumb parts={[{ name: 'tags' }]} />
+
+	<header class="page-head">
+		<h1 class="page-title">标签</h1>
+		<p class="page-sub mono">{tags.length} 个标签 · {docs.length} 篇藏书</p>
+	</header>
+
+	{
+		tags.length > 0 ? (
+			<div class="lib-list">
+				{tags.map(([tag, count]) => (
+					<a class="lib-item" href={withBase(`/search/?q=${encodeURIComponent(tag)}`)}>
+						<svg class="ic"><use href="#i-tag"></use></svg>
+						<span class="lib-main">
+							<span class="lib-title">{tag}</span>
+							<span class="lib-path mono">{count} 篇藏书</span>
+						</span>
+						<svg class="lib-arrow"><use href="#i-chev"></use></svg>
+					</a>
+				))}
+			</div>
+		) : (
+			<p class="empty">还没有标签。</p>
+		)
+	}
+</SiteLayout>

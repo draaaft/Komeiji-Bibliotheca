@@ -1,0 +1,90 @@
+---
+import { formatDate, latestDate, type Doc } from '../lib/docs';
+import { withBase } from '../lib/site';
+
+interface Props {
+	docs: Doc[];
+	focus?: boolean;
+}
+
+const { docs, focus = false } = Astro.props;
+---
+
+<div class="search" id="search">
+	<svg><use href="#i-search"></use></svg>
+	<input
+		id="search-input"
+		type="search"
+		placeholder="搜索标题、路径或标签…"
+		autocomplete="off"
+		aria-label="搜索藏书"
+		data-autofocus={focus ? '' : undefined}
+	/>
+	<span class="search-count mono" id="search-count" aria-live="polite">{docs.length} 篇</span>
+</div>
+
+<div class="lib-list" id="lib-list">
+	{
+		docs.map((doc) => {
+			const date = latestDate(doc);
+			return (
+				<a
+					class="lib-item"
+					href={withBase(doc.path)}
+					data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
+				>
+					<svg class="ic"><use href="#i-md"></use></svg>
+					<span class="lib-main">
+						<span class="lib-title">{doc.title}</span>
+						<span class="lib-path mono">{doc.dir ? `${doc.dir}/` : ''}{doc.file}</span>
+					</span>
+					{date && (
+						<time class="lib-date mono" datetime={date.toISOString()}>
+							{formatDate(date)}
+						</time>
+					)}
+				</a>
+			);
+		})
+	}
+</div>
+
+{
+	docs.length === 0 ? (
+		<p class="empty">还没有藏书。往 src/content 里放一篇 Markdown 就会出现在这里。</p>
+	) : (
+		<p class="empty" id="search-empty" hidden>没有找到匹配的藏书。</p>
+	)
+}
+
+<script>
+	const input = document.getElementById('search-input');
+	const items = [...document.querySelectorAll('.lib-item')];
+	const count = document.getElementById('search-count');
+	const empty = document.getElementById('search-empty');
+
+	if (input instanceof HTMLInputElement && count) {
+		const query = new URLSearchParams(location.search).get('q');
+		if (query) input.value = query;
+		if (query || location.hash === '#search' || input.hasAttribute('data-autofocus')) {
+			input.focus();
+		}
+
+		const update = () => {
+			const value = input.value.trim().toLowerCase();
+			let matches = 0;
+
+			for (const item of items) {
+				const hit = !value || (item.dataset.search ?? '').includes(value);
+				item.toggleAttribute('hidden', !hit);
+				if (hit) matches += 1;
+			}
+
+			count.textContent = `${matches} 篇`;
+			empty?.toggleAttribute('hidden', matches !== 0);
+		};
+
+		input.addEventListener('input', update);
+		update();
+	}
+</script>

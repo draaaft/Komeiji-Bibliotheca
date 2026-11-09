@@ -1,7 +1,8 @@
 ---
 import Breadcrumb from '../components/Breadcrumb.astro';
+import DocSearch from '../components/DocSearch.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { formatDate, latestDate, loadLibrary } from '../lib/docs';
+import { loadLibrary } from '../lib/docs';
 import { withBase } from '../lib/site';
 
 const { docs } = await loadLibrary();
@@ -15,76 +16,5 @@ const { docs } = await loadLibrary();
 		<p class="page-sub mono">{docs.length} 篇 · 全部 Markdown 文档</p>
 	</header>
 
-	<div class="search" id="search">
-		<svg><use href="#i-search"></use></svg>
-		<input
-			id="search-input"
-			type="search"
-			placeholder="搜索标题、路径或标签…"
-			autocomplete="off"
-			aria-label="搜索藏书"
-		/>
-		<span class="search-count mono" id="search-count" aria-live="polite">{docs.length} 篇</span>
-	</div>
-
-	<div class="lib-list" id="lib-list">
-		{
-			docs.map((doc) => {
-				const date = latestDate(doc);
-				return (
-					<a
-						class="lib-item"
-						href={withBase(doc.path)}
-						data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
-					>
-						<svg class="ic"><use href="#i-md"></use></svg>
-						<span class="lib-main">
-							<span class="lib-title">{doc.title}</span>
-							<span class="lib-path mono">{doc.dir ? `${doc.dir}/` : ''}{doc.file}</span>
-						</span>
-						{date && (
-							<time class="lib-date mono" datetime={date.toISOString()}>
-								{formatDate(date)}
-							</time>
-						)}
-					</a>
-				);
-			})
-		}
-	</div>
-
-	{
-		docs.length === 0 ? (
-			<p class="empty">还没有藏书。往 src/content 里放一篇 Markdown 就会出现在这里。</p>
-		) : (
-			<p class="empty" id="search-empty" hidden>没有找到匹配的藏书。</p>
-		)
-	}
+	<DocSearch docs={docs} />
 </SiteLayout>
-
-<script>
-	const input = document.getElementById('search-input');
-	const items = [...document.querySelectorAll('.lib-item')];
-	const count = document.getElementById('search-count');
-	const empty = document.getElementById('search-empty');
-
-	if (input instanceof HTMLInputElement && count) {
-		const update = () => {
-			const query = input.value.trim().toLowerCase();
-			let matches = 0;
-
-			for (const item of items) {
-				const hit = !query || (item.dataset.search ?? '').includes(query);
-				item.toggleAttribute('hidden', !hit);
-				if (hit) matches += 1;
-			}
-
-			count.textContent = `${matches} 篇`;
-			empty?.toggleAttribute('hidden', matches !== 0);
-		};
-
-		input.addEventListener('input', update);
-		if (location.hash === '#search') input.focus();
-		update();
-	}
-</script>

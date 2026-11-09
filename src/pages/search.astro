@@ -1,0 +1,20 @@
+---
+import Breadcrumb from '../components/Breadcrumb.astro';
+import DocSearch from '../components/DocSearch.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { loadLibrary } from '../lib/docs';
+import { withBase } from '../lib/site';
+
+const { docs } = await loadLibrary();
+---
+
+<SiteLayout title="搜索" tab={{ label: '搜索', href: withBase('/search/'), icon: 'search' }}>
+	<Breadcrumb parts={[{ name: 'search' }]} />
+
+	<header class="page-head">
+		<h1 class="page-title">搜索</h1>
+		<p class="page-sub mono">{docs.length} 篇 · 按标题、路径或标签筛选</p>
+	</header>
+
+	<DocSearch docs={docs} focus />
+</SiteLayout>

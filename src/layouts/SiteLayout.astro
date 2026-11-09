@@ -9,7 +9,7 @@ import '../styles/global.css';
 interface Tab {
 	label: string;
 	href: string;
-	icon?: 'md' | 'folder' | 'files';
+	icon?: 'md' | 'folder' | 'files' | 'search' | 'tag';
 }
 
 interface Props {
@@ -23,6 +23,8 @@ interface Props {
 const { title, description = site.description, author, tab, outline = [] } = Astro.props;
 const { tree } = await loadLibrary();
 const current = toContentPath(Astro.url.pathname);
+const isSearch = current === '/search/';
+const isTags = current === '/tags/';
 const documentTitle = title === site.nameZh ? `${title} · ${site.name}` : `${title} · ${site.nameZh}`;
 const tabIcon = tab?.icon ?? 'md';
 ---
@@ -61,17 +63,41 @@ const tabIcon = tab?.icon ?? 'md';
 		<div class="app">
 			<nav class="activity" aria-label="快捷入口">
 				<div class="act-icons">
-					<span class="act-btn on" title="藏书" aria-hidden="true"
-						><svg><use href="#i-files"></use></svg></span
+					<button
+						class:list={['act-btn', { on: !isSearch && !isTags }]}
+						type="button"
+						data-sidebar-toggle
+						title="藏书"
+						aria-label="藏书"
+						aria-controls="sidebar"
+						aria-expanded="true"
 					>
-					<a class="act-btn" href={withBase('/library/#search')} title="搜索" aria-label="搜索"
+						<svg><use href="#i-files"></use></svg>
+					</button>
+					<a
+						class:list={['act-btn', { on: isSearch }]}
+						href={withBase('/search/')}
+						title="搜索"
+						aria-label="搜索"
+						aria-current={isSearch ? 'page' : undefined}
 						><svg><use href="#i-search"></use></svg></a
 					>
-					<span class="act-btn" title="源代码管理" aria-hidden="true"
-						><svg><use href="#i-branch"></use></svg></span
+					<a
+						class="act-btn"
+						href="https://github.com/draaaft/Komeiji-Bibliotheca"
+						target="_blank"
+						rel="noopener noreferrer"
+						title="GitHub 仓库"
+						aria-label="GitHub 仓库"
+						><svg><use href="#i-github"></use></svg></a
 					>
-					<span class="act-btn" title="标签" aria-hidden="true"
-						><svg><use href="#i-tag"></use></svg></span
+					<a
+						class:list={['act-btn', { on: isTags }]}
+						href={withBase('/tags/')}
+						title="标签"
+						aria-label="标签"
+						aria-current={isTags ? 'page' : undefined}
+						><svg><use href="#i-tag"></use></svg></a
 					>
 				</div>
 				<button
@@ -87,10 +113,19 @@ const tabIcon = tab?.icon ?? 'md';
 
 			<aside class="sidebar" id="sidebar" aria-label="藏书目录">
 				<div class="sb-head">藏书</div>
-				<a class="ws" href={withBase('/')} title={site.name}>
-					<span class="chev"><svg><use href="#i-chev"></use></svg></span>
-					<span>{site.root}</span>
-				</a>
+				<div class="ws" title={site.name}>
+					<button
+						class="chev"
+						type="button"
+						aria-expanded="true"
+						aria-label="折叠文件树"
+						title="折叠文件树"
+						data-file-tree-toggle
+					>
+						<svg><use href="#i-chev"></use></svg>
+					</button>
+					<a href={withBase('/')}>{site.root}</a>
+				</div>
 				<FileTree nodes={tree} current={current} />
 			</aside>
 
@@ -113,19 +148,37 @@ const tabIcon = tab?.icon ?? 'md';
 						class:list={['tab', { on: current === '/' }]}
 						href={withBase('/')}
 						aria-current={current === '/' ? 'page' : undefined}
+						data-home
 					>
-						<svg class="ic"><use href="#i-flag"></use></svg><span>开始</span><span class="x" aria-hidden="true">×</span>
+						<svg class="ic"><use href="#i-flag"></use></svg><span>开始</span>
+						<span
+							class="x"
+							role="button"
+							tabindex="0"
+							data-tab-close
+							title="关闭"
+							aria-label="关闭 开始">×</span
+						>
 					</a>
 					{
 						tab && (
 							<a class="tab on" href={tab.href} aria-current="page">
 								<svg class="ic"><use href={`#i-${tabIcon}`}></use></svg>
 								<span>{tab.label}</span>
-								<span class="x" aria-hidden="true">×</span>
+								<span
+									class="x"
+									role="button"
+									tabindex="0"
+									data-tab-close
+									title="关闭"
+									aria-label={`关闭 ${tab.label}`}
+								>
+									×
+								</span>
 							</a>
 						)
 					}
-					<div class="tab-plus" aria-hidden="true">+</div>
+					<a class="tab-plus" href={withBase('/')} title="新建标签" aria-label="新建标签">+</a>
 				</div>
 
 				<div class="editor" id="editor">
@@ -154,6 +207,14 @@ const tabIcon = tab?.icon ?? 'md';
 				});
 
 				const body = document.body;
+				const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+				const desktop = window.matchMedia('(min-width: 961px)');
+				sidebarToggle?.addEventListener('click', () => {
+					if (!desktop.matches) return;
+					const closed = body.classList.toggle('sidebar-closed');
+					sidebarToggle.setAttribute('aria-expanded', String(!closed));
+				});
+
 				const burger = document.querySelector('.burger');
 				const scrim = document.querySelector('.scrim');
 				const setDrawer = (open) => {
@@ -176,6 +237,46 @@ const tabIcon = tab?.icon ?? 'md';
 							`${collapsed ? '展开' : '折叠'} ${button.dataset.name ?? ''}`
 						);
 					});
+				});
+
+				const treeRootToggle = document.querySelector('[data-file-tree-toggle]');
+				const treeRoot = document.querySelector('#sidebar > .tree');
+				treeRootToggle?.addEventListener('click', (event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					if (!treeRoot) return;
+					const collapsed = !treeRoot.hasAttribute('hidden');
+					treeRoot.toggleAttribute('hidden', collapsed);
+					treeRootToggle.setAttribute('aria-expanded', String(!collapsed));
+					treeRootToggle.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}文件树`);
+					treeRootToggle.title = `${collapsed ? '展开' : '折叠'}文件树`;
+				});
+
+				const homeTab = document.querySelector('[data-home]');
+				const startHref = homeTab?.getAttribute('href') ?? '/';
+				const atHome = homeTab?.classList.contains('on') ?? false;
+				const goHome = () => {
+					if (!atHome) location.href = startHref;
+				};
+				document.querySelectorAll('[data-tab-close]').forEach((close) => {
+					const closeTab = (event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						const tab = close.closest('.tab');
+						if (!tab) return;
+						if (!tab.classList.contains('on')) {
+							tab.remove();
+							return;
+						}
+						goHome();
+					};
+					close.addEventListener('click', closeTab);
+					close.addEventListener('keydown', (event) => {
+						if (event.key === 'Enter' || event.key === ' ') closeTab(event);
+					});
+				});
+				document.querySelector('.tab-plus')?.addEventListener('click', (event) => {
+					if (atHome) event.preventDefault();
 				});
 
 				const tocToggle = document.getElementById('toc-toggle');
