@@ -2,7 +2,7 @@ export const site = {
 	name: 'Komeiji Bibliotheca',
 	nameZh: '古明寺藏书阁',
 	root: 'Komeiji-Bibliotheca',
-	description: '古明寺藏书阁：用 IDE 打开的个人笔记与资料库。',
+	description: '古明地恋的物理讨论班，不止于物理~',
 };
 
 // GitHub Pages serves project sites under /<repo>, so every internal link has
