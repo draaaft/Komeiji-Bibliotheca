@@ -56,35 +56,3 @@ const { docs, focus = false } = Astro.props;
 		<p class="empty" id="search-empty" hidden>没有找到匹配的藏书。</p>
 	)
 }
-
-<script>
-	const input = document.getElementById('search-input');
-	const items = [...document.querySelectorAll('.lib-item')];
-	const count = document.getElementById('search-count');
-	const empty = document.getElementById('search-empty');
-
-	if (input instanceof HTMLInputElement && count) {
-		const query = new URLSearchParams(location.search).get('q');
-		if (query) input.value = query;
-		if (query || location.hash === '#search' || input.hasAttribute('data-autofocus')) {
-			input.focus();
-		}
-
-		const update = () => {
-			const value = input.value.trim().toLowerCase();
-			let matches = 0;
-
-			for (const item of items) {
-				const hit = !value || (item.dataset.search ?? '').includes(value);
-				item.toggleAttribute('hidden', !hit);
-				if (hit) matches += 1;
-			}
-
-			count.textContent = `${matches} 篇`;
-			empty?.toggleAttribute('hidden', matches !== 0);
-		};
-
-		input.addEventListener('input', update);
-		update();
-	}
-</script>

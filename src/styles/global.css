@@ -97,6 +97,7 @@ button.chev[aria-expanded="false"] svg{transform:rotate(0deg)}
 .tab .ic{width:14px;height:14px;flex:none;color:var(--accent)}
 .tab.on{background:var(--bg);color:var(--text-strong);border-top-color:var(--accent);border-bottom-color:var(--bg)}
 .tab.on:hover{background:var(--bg)}
+.tab.preview>span:not(.x){font-style:italic}
 .tab .x{flex:none;color:var(--text-faint);font-size:14px;line-height:1;padding:2px 4px;border-radius:3px;font-family:'JetBrains Mono',monospace}
 .tab .x:hover{background:var(--hover);color:var(--text)}
 .tab-plus{color:var(--text-faint);font-size:16px;padding:0 9px;display:flex;align-items:center;cursor:default;font-family:'JetBrains Mono',monospace}

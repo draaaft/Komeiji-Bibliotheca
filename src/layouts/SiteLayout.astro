@@ -4,12 +4,13 @@ import IconSprite from '../components/IconSprite.astro';
 import Outline from '../components/Outline.astro';
 import { loadLibrary, type OutlineItem } from '../lib/docs';
 import { site, toContentPath, withBase } from '../lib/site';
+import 'katex/dist/katex.min.css';
 import '../styles/global.css';
 
 interface Tab {
 	label: string;
 	href: string;
-	icon?: 'md' | 'folder' | 'files' | 'search' | 'tag';
+	icon?: 'md' | 'folder' | 'files' | 'search' | 'tag' | 'flag';
 }
 
 interface Props {
@@ -26,7 +27,13 @@ const current = toContentPath(Astro.url.pathname);
 const isSearch = current === '/search/';
 const isTags = current === '/tags/';
 const documentTitle = title === site.nameZh ? `${title} · ${site.name}` : `${title} · ${site.nameZh}`;
-const tabIcon = tab?.icon ?? 'md';
+const pageTab: Required<Tab> = tab
+	? { label: tab.label, href: tab.href, icon: tab.icon ?? 'md' }
+	: {
+			label: current === '/' ? '开始' : title,
+			href: withBase(current),
+			icon: current === '/' ? 'flag' : 'md',
+		};
 ---
 
 <!doctype html>
@@ -143,50 +150,48 @@ const tabIcon = tab?.icon ?? 'md';
 					<a class="mb-title mono" href={withBase('/')}>~/{site.root}</a>
 				</div>
 
-				<div class="tabbar">
+				<div class="tabbar" id="tabbar">
 					<a
-						class:list={['tab', { on: current === '/' }]}
-						href={withBase('/')}
-						aria-current={current === '/' ? 'page' : undefined}
-						data-home
+						class="tab on"
+						href={pageTab.href}
+						data-tab-id={current}
+						title={`~${current}`}
+						aria-current="page"
 					>
-						<svg class="ic"><use href="#i-flag"></use></svg><span>开始</span>
+						<svg class="ic"><use href={`#i-${pageTab.icon}`}></use></svg>
+						<span>{pageTab.label}</span>
 						<span
 							class="x"
 							role="button"
 							tabindex="0"
 							data-tab-close
 							title="关闭"
-							aria-label="关闭 开始">×</span
+							aria-label={`关闭 ${pageTab.label}`}>×</span
 						>
 					</a>
-					{
-						tab && (
-							<a class="tab on" href={tab.href} aria-current="page">
-								<svg class="ic"><use href={`#i-${tabIcon}`}></use></svg>
-								<span>{tab.label}</span>
-								<span
-									class="x"
-									role="button"
-									tabindex="0"
-									data-tab-close
-									title="关闭"
-									aria-label={`关闭 ${tab.label}`}
-								>
-									×
-								</span>
-							</a>
-						)
-					}
 					<a class="tab-plus" href={withBase('/')} title="新建标签" aria-label="新建标签">+</a>
+					<template id="tab-template">
+						<a class="tab" href="#" draggable="true">
+							<svg class="ic"><use href="#i-md"></use></svg>
+							<span></span>
+							<span class="x" role="button" tabindex="0" data-tab-close title="关闭">×</span>
+						</a>
+					</template>
 				</div>
 
 				<div class="editor" id="editor">
-					<div class="page">
-						<div class="page-content">
-							<slot />
+					<div
+						class="pane"
+						data-tab-href={pageTab.href}
+						data-tab-label={pageTab.label}
+						data-tab-icon={pageTab.icon}
+					>
+						<div class="page">
+							<div class="page-content">
+								<slot />
+							</div>
+							{outline.length > 0 && <Outline headings={outline} />}
 						</div>
-						{outline.length > 0 && <Outline headings={outline} />}
 					</div>
 				</div>
 			</main>
@@ -195,6 +200,8 @@ const tabIcon = tab?.icon ?? 'md';
 		<div class="scrim"></div>
 
 		<script>
+			import { initTabs } from '../scripts/tabs';
+
 			(function () {
 				const root = document.documentElement;
 				const themeToggle = document.querySelector('[data-theme-toggle]');
@@ -252,64 +259,11 @@ const tabIcon = tab?.icon ?? 'md';
 					treeRootToggle.title = `${collapsed ? '展开' : '折叠'}文件树`;
 				});
 
-				const homeTab = document.querySelector('[data-home]');
-				const startHref = homeTab?.getAttribute('href') ?? '/';
-				const atHome = homeTab?.classList.contains('on') ?? false;
-				const goHome = () => {
-					if (!atHome) location.href = startHref;
-				};
-				document.querySelectorAll('[data-tab-close]').forEach((close) => {
-					const closeTab = (event) => {
-						event.preventDefault();
-						event.stopPropagation();
-						const tab = close.closest('.tab');
-						if (!tab) return;
-						if (!tab.classList.contains('on')) {
-							tab.remove();
-							return;
-						}
-						goHome();
-					};
-					close.addEventListener('click', closeTab);
-					close.addEventListener('keydown', (event) => {
-						if (event.key === 'Enter' || event.key === ' ') closeTab(event);
-					});
-				});
-				document.querySelector('.tab-plus')?.addEventListener('click', (event) => {
-					if (atHome) event.preventDefault();
-				});
-
-				const tocToggle = document.getElementById('toc-toggle');
-				tocToggle?.addEventListener('click', () => {
-					const off = body.classList.toggle('toc-off');
-					tocToggle.setAttribute('aria-expanded', String(!off));
-					tocToggle.title = off ? '显示目录' : '隐藏目录';
-				});
-
 				document
 					.querySelector('.trow[aria-current="page"], .trow.sel')
 					?.scrollIntoView({ block: 'nearest' });
 
-				const tocLinks = [...document.querySelectorAll('.toc-i[data-target]')];
-				const editor = document.getElementById('editor');
-
-				if (tocLinks.length && editor) {
-					const headings = tocLinks
-						.map((link) => document.getElementById(link.dataset.target ?? ''))
-						.filter((heading) => heading !== null);
-					const activate = (id) =>
-						tocLinks.forEach((link) => link.classList.toggle('on', link.dataset.target === id));
-					const observer = new IntersectionObserver(
-						(entries) => {
-							const visible = entries
-								.filter((entry) => entry.isIntersecting)
-								.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-							if (visible[0]) activate(visible[0].target.id);
-						},
-						{ root: editor, rootMargin: '0px 0px -72% 0px', threshold: 0 }
-					);
-					headings.forEach((heading) => observer.observe(heading));
-				}
+				initTabs();
 			})();
 		</script>
 	</body>
