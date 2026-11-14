@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://draaaft.github.io/Komeiji-Bibliotheca/sitemap-index.xml

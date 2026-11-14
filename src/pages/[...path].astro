@@ -65,6 +65,7 @@ if (activeDoc) {
 	title={activeDoc?.title ?? activeFolder?.name ?? '藏书'}
 	description={activeDoc?.description}
 	author={activeDoc?.author}
+	type={activeDoc ? 'article' : 'website'}
 	tab={activeDoc
 		? { label: activeDoc.file, href: withBase(activeDoc.path) }
 		: activeFolder

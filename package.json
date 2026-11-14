@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.7",
+    "@astrojs/sitemap": "^3.7.5",
     "astro": "^7.4.7",
     "katex": "^0.19.1",
     "satteri": "^0.11.7",
