@@ -45,7 +45,7 @@ const { nodes, current, depth = 0 } = Astro.props;
 						title={node.doc?.title ?? node.name}
 					>
 						<span class="chev"></span>
-						<svg class="ic"><use href="#i-md"></use></svg>
+						<svg class="ic"><use href={node.doc?.format === 'pdf' ? '#i-pdf' : '#i-md'}></use></svg>
 						<span class="nm">{node.doc?.title ?? node.name}</span>
 					</a>
 				</li>

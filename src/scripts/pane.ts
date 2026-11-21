@@ -13,6 +13,9 @@ export function initPane(pane: HTMLElement, options: PaneOptions = {}): void {
 	initSearch(pane, options);
 	initOutlineToggle(pane);
 	initAnchors(pane);
+	if (pane.querySelector('[data-pdf-reader]')) {
+		void import('./pdf-reader').then(({ initPdfReader }) => initPdfReader(pane));
+	}
 }
 
 /** Applies a search query to an already-initialized search pane. */

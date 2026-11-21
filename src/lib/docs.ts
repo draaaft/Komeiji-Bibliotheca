@@ -1,4 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { withBase } from './site';
 
 export interface Doc {
 	id: string;
@@ -12,6 +15,9 @@ export interface Doc {
 	update?: Date;
 	tags: string[];
 	hasH1: boolean;
+	format: 'md' | 'pdf';
+	pdfFile?: string;
+	pdfUrl?: string;
 	entry: CollectionEntry<'docs'>;
 }
 
@@ -83,11 +89,24 @@ function toDoc(entry: CollectionEntry<'docs'>): Doc {
 	const body = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '');
 	const heading = body.match(/^ {0,3}#[ \t]+(.+?)[ \t]*$/m)?.[1];
 	const fallbackTitle = heading ? stripInline(heading) : stem;
+	const format = entry.data.format;
+	let pdfFile: string | undefined;
+	let pdfUrl: string | undefined;
+	if (format === 'pdf') {
+		if (!entry.filePath) {
+			throw new Error(`PDF document ${entry.id} has no source Markdown file path`);
+		}
+		pdfFile = resolve(entry.filePath.replace(/\.md$/i, '.pdf'));
+		if (!existsSync(pdfFile)) {
+			throw new Error(`PDF document ${entry.id} is missing its same-name PDF: ${pdfFile}`);
+		}
+		pdfUrl = withBase(`/doc-pdf/${segments.map(encodeURIComponent).join('/')}.pdf`);
+	}
 	return {
 		id: entry.id,
 		path: normalizePath(entry.id),
 		dir: segments.slice(0, -1).join('/'),
-		file: `${stem}.md`,
+		file: `${stem}.${format}`,
 		title: entry.data.title?.trim() || fallbackTitle,
 		author: entry.data.author,
 		description: entry.data.description,
@@ -95,6 +114,9 @@ function toDoc(entry: CollectionEntry<'docs'>): Doc {
 		update: entry.data.update,
 		tags: entry.data.tags,
 		hasH1: Boolean(heading),
+		format,
+		pdfFile,
+		pdfUrl,
 		entry,
 	};
 }
