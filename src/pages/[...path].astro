@@ -12,6 +12,7 @@ import {
 	type LibraryNode,
 	type OutlineItem,
 } from '../lib/docs';
+import { renderDocMeta } from '../lib/markdown-plugins.mjs';
 import { withBase } from '../lib/site';
 
 type Props =
@@ -80,6 +81,9 @@ if (activeDoc) {
 			<>
 				{!activeDoc.hasH1 && <h1 class="doc-title">{activeDoc.title}</h1>}
 				<article class="prose">
+					{activeDoc.format === 'pdf' && !activeDoc.hasH1 && (
+						<Fragment set:html={renderDocMeta(activeDoc)} />
+					)}
 					<Content />
 				</article>
 				{activeDoc.format === 'pdf' && activeDoc.pdfUrl && (

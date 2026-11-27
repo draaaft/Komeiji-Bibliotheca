@@ -51,8 +51,30 @@ const formatFrontmatterDate = (value) => {
 	return Number.isNaN(date.getTime()) ? String(value) : date.toISOString().slice(0, 10);
 };
 
-// Insert the frontmatter byline and tags into the Markdown flow directly
-// under the title, without any layout wrappers.
+export function renderDocMeta({ author, pubDate, update, tags }) {
+	const parts = [];
+	if (author) {
+		parts.push(`author: ${escapeHtml(String(author))}`);
+	}
+	if (pubDate) {
+		parts.push(`pubDate: ${escapeHtml(formatFrontmatterDate(pubDate))}`);
+	}
+	if (update) {
+		parts.push(`update: ${escapeHtml(formatFrontmatterDate(update))}`);
+	}
+	const tagList = Array.isArray(tags) && tags.length
+		? `<span class="doc-tags">${tags
+				.map((tag) => `<span class="tag">${escapeHtml(String(tag))}</span>`)
+				.join('')}</span>`
+		: '';
+	if (parts.length === 0 && !tagList) return '';
+
+	return `<p class="doc-meta">${parts
+		.map((part) => `<span>${part}</span>`)
+		.join('')}${tagList}</p>`;
+}
+
+// Put the byline and tags directly below the Markdown title.
 export function docMeta() {
 	return defineMdastPlugin({
 		name: 'doc-meta',
@@ -60,33 +82,13 @@ export function docMeta() {
 			const frontmatter = ctx.data.astro?.frontmatter;
 			if (!frontmatter) return;
 
-			const parts = [];
-			if (frontmatter.author) {
-				parts.push(`author: ${escapeHtml(String(frontmatter.author))}`);
-			}
-			if (frontmatter.pubDate) {
-				parts.push(`pubDate: ${escapeHtml(formatFrontmatterDate(frontmatter.pubDate))}`);
-			}
-			if (frontmatter.update) {
-				parts.push(`update: ${escapeHtml(formatFrontmatterDate(frontmatter.update))}`);
-			}
-			const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
-			if (parts.length === 0 && tags.length === 0) return;
-
-			const h1Index = root.children.findIndex(
+			const title = root.children.find(
 				(child) => child.type === 'heading' && child.depth === 1
 			);
-			if (h1Index < 0) return;
+			if (!title) return;
 
-			const tagList = tags.length
-				? `<span class="doc-tags">${tags
-						.map((tag) => `<span class="tag">${escapeHtml(String(tag))}</span>`)
-						.join('')}</span>`
-				: '';
-			const meta = `<p class="doc-meta">${parts
-				.map((part) => `<span>${part}</span>`)
-				.join('')}${tagList}</p>`;
-			ctx.insertAfter(root.children[h1Index], { type: 'html', value: meta });
+			const meta = renderDocMeta(frontmatter);
+			if (meta) ctx.insertAfter(title, { type: 'html', value: meta });
 		},
 	});
 }
