@@ -78,6 +78,34 @@ src/
 
 推送到 `main` 后由 GitHub Actions 发布到 GitHub Pages。站点部署在 `/Komeiji-Bibliotheca` 子路径下，站内绝对链接需要经过 `withBase()`。
 
+## PDF 文档
+
+PDF 页面在文章主滚动区域内逐页显示，页面临近视口时加载。保留单独打开和下载入口；PDF 仍按原文件版面显示，文本不会像 Markdown 一样自动重新排版。
+
+PDF 文档也使用 `.md` 文件保存标题、作者、日期、摘要和标签。将同名 PDF 放在同一目录，并在 Markdown 的 frontmatter 中设置 `format: pdf`：
+
+```text
+src/content/physics/example.md
+src/content/physics/example.pdf
+```
+
+```md
+---
+title: 示例文档
+author: Yizhou
+pubDate: 2026-11-21
+tags: [物理]
+draft: false
+format: pdf
+---
+
+# 示例文档
+
+这里可以写一段导言；下方会显示 PDF。
+```
+
+省略 `format` 时仍按普通 Markdown 文章显示。设置 `format: pdf` 后，缺少同名 PDF 会导致构建失败。`draft: true` 的文章和 PDF 均不会生成站点页面或 PDF 下载文件。PDF 在目录、搜索和标签页中只占一个文档条目；搜索目前只包括标题、路径和标签，不包括 PDF 正文。
+
 ## License
 
 MIT © 2026 Hilda

@@ -16,6 +16,7 @@
     "@astrojs/sitemap": "^3.7.5",
     "astro": "^7.4.7",
     "katex": "^0.19.1",
+    "pdfjs-dist": "^6.5.438",
     "satteri": "^0.11.7",
     "satteri-katex": "^0.3.0"
   }

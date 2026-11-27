@@ -43,7 +43,7 @@ let crumbs: Crumb[] = [];
 if (activeDoc) {
 	const rendered = await render(activeDoc.entry);
 	Content = rendered.Content;
-	outline = buildOutline(activeDoc, rendered.headings);
+	outline = activeDoc.format === 'pdf' ? [] : buildOutline(activeDoc, rendered.headings);
 	const segments = activeDoc.id.split('/');
 	crumbs = [
 		...segments.slice(0, -1).map((name, index) => ({
@@ -67,7 +67,7 @@ if (activeDoc) {
 	author={activeDoc?.author}
 	type={activeDoc ? 'article' : 'website'}
 	tab={activeDoc
-		? { label: activeDoc.file, href: withBase(activeDoc.path) }
+		? { label: activeDoc.file, href: withBase(activeDoc.path), icon: activeDoc.format }
 		: activeFolder
 			? { label: activeFolder.name, href: withBase(activeFolder.path), icon: 'folder' }
 			: undefined}
@@ -82,6 +82,18 @@ if (activeDoc) {
 				<article class="prose">
 					<Content />
 				</article>
+				{activeDoc.format === 'pdf' && activeDoc.pdfUrl && (
+					<section class="pdf-document" aria-label={`${activeDoc.title} PDF`}>
+						<p class="pdf-actions">
+							<a href={activeDoc.pdfUrl} target="_blank" rel="noopener">在新窗口打开 PDF</a>
+							<a href={activeDoc.pdfUrl} download={activeDoc.file}>下载 PDF</a>
+						</p>
+						<div class="pdf-reader" data-pdf-reader data-pdf-url={activeDoc.pdfUrl}>
+							<p class="pdf-status" role="status">正在加载 PDF…</p>
+							<div class="pdf-pages"></div>
+						</div>
+					</section>
+				)}
 			</>
 		) : activeFolder ? (
 			<>
@@ -107,7 +119,7 @@ if (activeDoc) {
 						const date = child.doc ? latestDate(child.doc) : undefined;
 						return (
 							<a class="lib-item" href={withBase(child.path)}>
-								<svg class="ic"><use href="#i-md"></use></svg>
+								<svg class="ic"><use href={child.doc?.format === 'pdf' ? '#i-pdf' : '#i-md'}></use></svg>
 								<span class="lib-main">
 									<span class="lib-title">{child.doc?.title}</span>
 									<span class="lib-path mono">{child.name}</span>

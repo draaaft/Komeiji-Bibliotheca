@@ -33,7 +33,7 @@ const { docs, focus = false } = Astro.props;
 					href={withBase(doc.path)}
 					data-search={`${doc.title} ${doc.id} ${doc.tags.join(' ')}`.toLowerCase()}
 				>
-					<svg class="ic"><use href="#i-md"></use></svg>
+					<svg class="ic"><use href={doc.format === 'pdf' ? '#i-pdf' : '#i-md'}></use></svg>
 					<span class="lib-main">
 						<span class="lib-title">{doc.title}</span>
 						<span class="lib-path mono">{doc.dir ? `${doc.dir}/` : ''}{doc.file}</span>
@@ -51,7 +51,7 @@ const { docs, focus = false } = Astro.props;
 
 {
 	docs.length === 0 ? (
-		<p class="empty">还没有文章。往 src/content 里放一篇 Markdown 就会出现在这里。</p>
+		<p class="empty">还没有文章。往 src/content 里放一篇 Markdown 或 PDF 文档就会出现在这里。</p>
 	) : (
 		<p class="empty" id="search-empty" hidden>没有找到匹配的文章。</p>
 	)
